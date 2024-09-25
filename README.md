@@ -1,7 +1,7 @@
 
 # Audio Visualiser for Wallpaper Engine
 
-Code for a wallpaper engine script which makes an audio visualiser based on the asset you bind it to. 
+A wallpaper engine script which makes an audio visualiser based on the asset you bind it to. 
 
 Unlike normal visualiser scripts which scale a model/asset vertically while duplicating horizontally, this duplicates on both axes(local).
 
