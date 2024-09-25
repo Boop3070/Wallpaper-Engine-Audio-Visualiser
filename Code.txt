@@ -1,0 +1,118 @@
+/*
+ Audio visualiser script.
+ "Base bars" are initialised by duplicating the origin bar by a set amount horizontally, these bars then serve as the base of the visualiser.
+ Each bar has a turn in which samples audio and the amplitude to then duplicate the bar model vertically(local axis) to match. Bars are updated each frame, and extra bars are hidden when not in use.
+ The whole thing can be rotated and scaled as needed.
+
+ -When using another bar model, the name should be "Bar"
+  */
+
+'use strict';
+
+
+var bars = [];
+
+const baseBars = 10;                                // Changes horizontal length
+const maxDupeBars = 15;                             // Changes vertical length
+const maxBars = 200;                                // Limits visible bars.
+const baseScale = new Vec3(1);                      // Bar size
+const verticalSpacing = 40;                         // Vertical spacing between duplicated bars
+const horizSpacing = 70;                            // Horizontal spacing between base bars
+const rotationAngle = 0;                            // Tilts the entire visualiser
+
+let baseOrigin;
+let audioData = engine.registerAudioBuffers(64);    // Register audio buffers for amplitude data
+
+// Main update function
+export function update() {
+    let currentBarIndex = baseBars;
+
+    for (let i = 0; i < baseBars; i++) {
+        let barOrigin = calculateBarOrigin(i);
+        let duplicateCount = Math.floor(audioData.average[i] * maxDupeBars);
+
+        updateBar(bars[i], barOrigin);
+
+        currentBarIndex = updateDuplicateBars(barOrigin, duplicateCount, currentBarIndex);
+    }
+
+    hideExtraBars(currentBarIndex); // Prevents any floating bars
+}
+
+// Function to initialize the bars
+export function init() {
+    bars.push(thisLayer);
+    let thisIndex = thisScene.getLayerIndex(thisLayer);
+
+    for (let i = 1; i < baseBars; i++) {
+        let newBar = thisScene.createLayer('models/bar.json');
+        thisScene.sortLayer(newBar, thisIndex);
+        newBar.parallaxDepth = new Vec2(0, 0);
+        bars.push(newBar);
+    }
+
+    baseOrigin = thisLayer.origin;
+}
+
+// Function to calculate bar origin based on the base index
+function calculateBarOrigin(index) {
+    let horizOffset = new Vec3(index * horizSpacing, 0, 0);
+    let rotatedOffset = rotate(baseOrigin, baseOrigin.copy().add(horizOffset), rotationAngle);
+    return new Vec3(rotatedOffset.rotatedX, rotatedOffset.rotatedY, 0);
+}
+
+// Function to update a single bar's position and properties
+function updateBar(bar, barOrigin) {
+    let {rotatedX, rotatedY} = rotate(barOrigin, barOrigin, rotationAngle); // Rotate around barOrigin
+    bar.origin = new Vec3(rotatedX, rotatedY, 0); // Set position
+    bar.scale = baseScale;
+    bar.angles = new Vec3(0, 0, rotationAngle);
+}
+
+// Function to update and create duplicate bars
+function updateDuplicateBars(barOrigin, duplicateCount, currentBarIndex) {
+    for (let j = 1; j <= duplicateCount && currentBarIndex < maxBars; j++, currentBarIndex++) {
+        let newBar = getOrCreateBar(currentBarIndex);
+        let newBarOrigin = barOrigin.copy().add(new Vec3(0, j * verticalSpacing, 0));
+
+        let {rotatedX: newRotatedX, rotatedY: newRotatedY} = rotate(barOrigin, newBarOrigin, rotationAngle);
+
+        newBar.origin = new Vec3(newRotatedX, newRotatedY, 0); 
+        newBar.angles = new Vec3(0, 0, rotationAngle); // Set rotation
+        newBar.scale = baseScale;
+        newBar.visible = true;
+        thisScene.sortLayer(newBar, currentBarIndex);
+
+        if (currentBarIndex >= bars.length) {
+            bars.push(newBar);
+        }
+    }
+    return currentBarIndex;
+}
+
+// Function to either get an existing bar or create a new one
+function getOrCreateBar(index) {
+    return (index >= bars.length) ? thisScene.createLayer('models/bar.json') : bars[index];
+}
+
+// Function to hide extra bars
+function hideExtraBars(startIndex) {
+    for (let j = startIndex; j < bars.length; j++) {
+        bars[j].visible = false;
+    }
+}
+
+// Helper function to calculate rotated coordinates around barOrigin
+function rotate(barOrigin, point, angle) {
+    let rad = angle * Math.PI / 180;
+    let translatedX = point.x - barOrigin.x;
+    let translatedY = point.y - barOrigin.y;
+
+    let rotatedX = Math.cos(rad) * translatedX - Math.sin(rad) * translatedY;
+    let rotatedY = Math.sin(rad) * translatedX + Math.cos(rad) * translatedY;
+
+    return {
+        rotatedX: rotatedX + barOrigin.x,
+        rotatedY: rotatedY + barOrigin.y
+    };
+}
