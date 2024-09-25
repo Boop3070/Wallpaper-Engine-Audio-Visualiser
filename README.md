@@ -13,7 +13,7 @@ Rotation, spacing and scaling are all configurable on top of changing coloumn an
 
 ## Deployment
 
-To attach this script to a model, navigate to the cogwheel shown after selecting your "bar" asset:
+To attach this script to a model, navigate to the cogwheel shown after selecting your "bar" asset in the wallpaper editor:
 ![image.png](https://i.postimg.cc/QMRhjhk4/image.png)
 
 Upon opening the dropdown, select the "Edit Script" option:
