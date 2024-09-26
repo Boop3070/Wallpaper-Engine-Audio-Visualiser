@@ -19,6 +19,7 @@ const baseScale = new Vec3(1);                      // Bar size
 const verticalSpacing = 40;                         // Vertical spacing between duplicated bars
 const horizSpacing = 70;                            // Horizontal spacing between base bars
 const rotationAngle = 0;                            // Tilts the entire visualiser
+const model = 'models/bar.json'                     //Model used for visualiser.
 
 let baseOrigin;
 let audioData = engine.registerAudioBuffers(64);    // Register audio buffers for amplitude data
@@ -45,7 +46,7 @@ export function init() {
     let thisIndex = thisScene.getLayerIndex(thisLayer);
 
     for (let i = 1; i < baseBars; i++) {
-        let newBar = thisScene.createLayer('models/bar.json');
+        let newBar = thisScene.createLayer(model);
         thisScene.sortLayer(newBar, thisIndex);
         newBar.parallaxDepth = new Vec2(0, 0);
         bars.push(newBar);
@@ -92,7 +93,7 @@ function updateDuplicateBars(barOrigin, duplicateCount, currentBarIndex) {
 
 // Function to either get an existing bar or create a new one
 function getOrCreateBar(index) {
-    return (index >= bars.length) ? thisScene.createLayer('models/bar.json') : bars[index];
+    return (index >= bars.length) ? thisScene.createLayer(model) : bars[index];
 }
 
 // Function to hide extra bars
